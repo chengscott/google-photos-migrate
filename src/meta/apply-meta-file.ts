@@ -2,6 +2,7 @@ import { WriteTags } from 'exiftool-vendored';
 import { MediaFile } from '../media/MediaFile';
 import { exhaustiveCheck } from '../ts';
 import { MetaType } from './MetaType';
+import { closeSync, openSync, utimesSync } from 'fs'
 import { readFile } from 'fs/promises';
 import { GoogleMetadata } from './GoogleMeta';
 import {
@@ -78,7 +79,13 @@ export async function applyMetaFile(
       '-overwrite_original',
       '-api',
       'quicktimeutc',
-    ]);
+    ]).then((dummy) => {
+        try {
+            utimesSync(mediaFile.path, timeTaken, timeTaken);
+        } catch (error) {
+            closeSync(openSync(mediaFile.path, 'w'));
+        }
+    });
   } catch (e) {
     if (e instanceof Error) {
       const wrongExtMatch = e.message.match(
